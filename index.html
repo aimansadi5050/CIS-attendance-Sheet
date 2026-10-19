@@ -219,14 +219,19 @@ footer { max-width: 1040px; margin: 28px auto 0; color: var(--muted); font-size:
 
 <footer>DIU CIS Attendance Portal &middot; Built by Aiman | 263-16-022 Daffodil International University</footer>
 
+<script src="config.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 (function () {
   "use strict";
-  // STEP 1: paste the two values from Supabase > Project Settings > API.
-  var SUPABASE_URL = "https://supabase.com/dashboard/project/tcyerucufvujhdvysfxs/settings/api-keys";
-  var SUPABASE_KEY = "sb_publishable_7sIZL2KgnGC0gW-Rh04-SQ_cTQ5IfRp";
+  // The two Supabase values live in config.js (so you never edit this big file).
+  var CFG = window.APP_CONFIG || {};
+  var SUPABASE_URL = CFG.url || "https://supabase.com/dashboard/project/tcyerucufvujhdvysfxs/settings/api-keys";
+  var SUPABASE_KEY = CFG.key || "sb_publishable_7sIZL2KgnGC0gW-Rh04-SQ_cTQ5IfRp";
 
+  SUPABASE_URL = SUPABASE_URL.trim().replace(/\/rest\/v1.*$/, "").replace(/\/+$/, "");
+  SUPABASE_KEY = SUPABASE_KEY.trim();
+  function why(err) { var m = String((err && err.message) || err); return m.length > 140 ? m.slice(0, 140) + "..." : m; }
   var $ = function (id) { return document.getElementById(id); };
   var pin = "", savedKey = "", timer = null;
   var view = { id: 0, label: "", date: "", rows: [], current: true };
@@ -235,7 +240,7 @@ footer { max-width: 1040px; margin: 28px auto 0; color: var(--muted); font-size:
   function rpc(fn, args) {
     return fetch(SUPABASE_URL + "/rest/v1/rpc/" + fn, {
       method: "POST",
-      headers: { "Content-Type": "application/json", apikey: SUPABASE_KEY },
+      headers: SUPABASE_KEY.indexOf("eyJ") === 0 ? { "Content-Type": "application/json", apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY } : { "Content-Type": "application/json", apikey: SUPABASE_KEY },
       body: JSON.stringify(args || {})
     }).then(function (r) {
       return r.json().catch(function () { return null; }).then(function (j) {
@@ -252,7 +257,7 @@ footer { max-width: 1040px; margin: 28px auto 0; color: var(--muted); font-size:
   function btn(text, cls, fn) { var b = document.createElement("button"); b.type = "button"; b.className = "btn sm " + cls; b.textContent = text; b.addEventListener("click", fn); return b; }
   function fail(err) {
     note(err.message === "locked" ? "Too many wrong PIN tries. Try again in 15 minutes." :
-         err.message === "bad_pin" ? "PIN was not accepted." : "Something went wrong. Check your internet and try again.");
+         err.message === "bad_pin" ? "PIN was not accepted." : "Something went wrong (" + why(err) + ").");
   }
 
   function reportDate() { return view.date; }
@@ -413,7 +418,7 @@ footer { max-width: 1040px; margin: 28px auto 0; color: var(--muted); font-size:
       show("v-teacher"); return loadPast();
     }).catch(function (err) {
       say($("pin-msg"), err.message === "locked" ? "Too many wrong tries. Try again in 15 minutes." :
-        err.message === "bad_pin" ? "Wrong PIN." : "Could not connect. Check your internet.", "err");
+        err.message === "bad_pin" ? "Wrong PIN." : "Could not connect (" + why(err) + ").", "err");
     });
   });
   timer = setInterval(function () { if (pin && !$("v-teacher").hidden && view.current) loadCurrent(true).catch(function () {}); }, 15000);
@@ -430,10 +435,10 @@ footer { max-width: 1040px; margin: 28px auto 0; color: var(--muted); font-size:
       form.reset(); $("student-name").focus(); say(msg, "Attendance recorded for " + name + ".", "ok");
     }).catch(function (err) {
       say(msg, err.message === "duplicate" ? "Registration number " + reg + " is already recorded." :
-        "Could not submit. Check your internet and try again.", "err");
+        "Could not submit (" + why(err) + ").", "err");
     }).then(function () { sb.disabled = false; });
   });
-  if (SUPABASE_URL.indexOf("PASTE") === 0) say(msg, "Setup not finished: add your Supabase URL and key inside this file.", "err");
+  if (SUPABASE_URL.indexOf("PASTE") === 0 || SUPABASE_KEY.indexOf("PASTE") === 0) say(msg, "Setup not finished: add your Supabase URL and key inside this file.", "err");
 })();
 </script>
 
