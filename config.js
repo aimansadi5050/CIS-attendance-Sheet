@@ -2,6 +2,6 @@
 // Project URL: looks like https://abcdxyz.supabase.co
 // Key: the long "anon" / "publishable" key. Never use the secret / service_role key.
 window.APP_CONFIG = {
-  url: "PASTE_YOUR_PROJECT_URL_HERE",
-  key: "PASTE_YOUR_PUBLIC_ANON_KEY_HERE"
+  url: "https://tcyerucufvujhdvysfxs.supabase.co",
+  key: "sb_publishable_7sIZL2KgnGC0gW-Rh04-SQ_cTQ5IfRp"
 };
